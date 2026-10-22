@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ניהול חתימות</title>
+<style>
+  :root { --teal: #0F4C5C; --copper: #B0682F; --ink:#20323a; --line:#e3e8ea; --bg:#f6f8f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Segoe UI',Arial,Helvetica,sans-serif; font-size:16px; line-height:1.6; }
+  header { background:var(--teal); color:#fff; padding:18px 16px; }
+  header .in { max-width:960px; margin:0 auto; }
+  header .nm { font-size:20px; font-weight:700; }
+  header .sub { color:#cfe0e5; font-size:14px; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 16px 60px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; margin-top:18px; }
+  h2 { font-size:18px; margin:0 0 14px; color:var(--teal); }
+  label { display:block; font-size:14px; margin:14px 0 5px; font-weight:600; }
+  input[type=text], input[type=email], input[type=file] { width:100%; padding:11px 12px; border:1px solid #c9d4d8; border-radius:8px; font-size:16px; font-family:inherit; background:#fff; }
+  .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .row input { flex:1; }
+  .x { background:none; border:1px solid #c9d4d8; border-radius:8px; width:42px; height:42px; cursor:pointer; color:#8d9ea5; font-size:16px; }
+  button { font-family:inherit; font-size:16px; border-radius:8px; cursor:pointer; }
+  .btn { background:var(--copper); color:#fff; border:0; padding:13px 26px; font-weight:700; }
+  .btn.sec { background:#fff; color:var(--teal); border:1px solid var(--teal); }
+  .btn.sm { padding:6px 12px; font-size:13px; font-weight:600; }
+  .btn.del { background:#fff; color:#9a2b2b; border:1px solid #e2c3c3; }
+  .btn:disabled { background:#b9c6cb; color:#fff; border-color:#b9c6cb; }
+  .chk { display:flex; gap:10px; align-items:center; margin-top:16px; font-size:15px; }
+  .chk input { width:20px; height:20px; }
+  .tbl { width:100%; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:right; padding:9px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:#5b6e76; font-weight:600; }
+  td.act { white-space:nowrap; }
+  td.act > * { margin:2px 0 2px 4px; }
+  .tag { font-size:12px; padding:3px 9px; border-radius:20px; background:#eef3f4; color:#5b6e76; white-space:nowrap; }
+  .tag.ok { background:#e7f3ec; color:#1d7a46; }
+  .out { background:#f0f4f5; border-right:4px solid var(--copper); padding:12px; border-radius:6px; margin-top:16px; word-break:break-all; font-size:14px; }
+  .muted { color:#5b6e76; font-size:14px; }
+  .hide { display:none; }
+  a.lnk { font-size:13px; color:var(--copper); font-weight:600; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+  @media (max-width:700px) { .grid { grid-template-columns:1fr; } }
+  #mepad { width:100%; max-width:460px; height:160px; border:2px dashed #c9d4d8; border-radius:10px; background:#fff; touch-action:none; display:block; }
+  #meprev { max-width:260px; max-height:90px; display:block; margin:6px 0; }
+  .tag.half { background:#fff4e5; color:#8a5a1e; }
+  @media (max-width:700px) {
+    .tbl table, .tbl tbody, .tbl tr, .tbl td { display:block; width:100%; }
+    .tbl tr:first-child { display:none; }
+    .tbl tr { border-bottom:1px solid var(--line); padding:10px 0; }
+    .tbl td { border:0; padding:2px 0; }
+    .tbl td.act { white-space:normal; padding-top:8px; }
+  }
+  select.inp { width:100%; padding:11px 12px; border:1px solid #c9d4d8; border-radius:8px; font-size:16px; font-family:inherit; background:#fff; }
+  h2 .btn { vertical-align:middle; }
+  .err { color:#9a2b2b; }
+</style>
+</head>
+<body>
+<header><div class="in"><div class="nm"><span id="hName">מאיר אייזנבאך</span> · ניהול חתימות</div><div class="sub">העלאת טופס, יצירת קישור ושליחה ללקוח</div></div></header>
+<div class="wrap">
+<div class="card" id="vLoad"><p class="muted">טוען…</p></div>
+<div class="card hide" id="vErr"><p>לא הצלחנו לטעון את הדף. בדרך כלל זה בגלל החיבור לאינטרנט, או שסינון האינטרנט (כמו נטפרי) עוד לא אישר את האתר.</p><button class="btn" id="reload" type="button">לנסות שוב</button></div>
+<div class="card hide" id="vDenied"><p>אין הרשאה לדף הזה. צריך להיכנס מהקישור המלא של דף הניהול.</p></div>
+
+<div id="vMain" class="hide">
+<div class="card">
+  <h2>מסמך חדש לחתימה</h2>
+  <div id="srcBox" class="hide">
+    <label for="src">מאיפה המסמך</label>
+    <select id="src" class="inp"><option value="">קובץ PDF חדש</option></select>
+    <div class="muted hide" id="tplHint"></div>
+  </div>
+  <div id="fileBox">
+  <label for="file">קובץ הטופס (PDF)</label>
+  <input type="file" id="file" accept="application/pdf">
+  </div>
+  <label for="title">שם המסמך</label>
+  <input type="text" id="title" placeholder="למשל: הסכם שכר טרחה">
+  <label for="client">שם הלקוח</label>
+  <input type="text" id="client">
+  <label for="email">מייל הלקוח</label>
+  <input type="email" id="email">
+  <div class="grid">
+    <div><label for="n2">לווה 2 – שם (לא חובה)</label><input type="text" id="n2"></div>
+    <div><label for="em2">לווה 2 – מייל (לא חובה)</label><input type="email" id="em2"></div>
+  </div>
+  <div class="muted">אם יש שני לווים: בדף הסימון מסמנים לכל מסגרת של מי היא, וכל לווה מקבל קישור משלו.</div>
+
+  <label>פרטים שהלקוח ימלא</label>
+  <div id="fields"></div>
+  <button class="btn sec sm" id="add" type="button">הוספת שדה</button>
+
+  <label class="chk"><input type="checkbox" id="scan" checked><span>לאפשר ללקוח לצרף צילום של הטופס החתום בכתב יד (במקום חתימה על המסך)</span></label>
+  <label class="chk"><input type="checkbox" id="askid"><span>לבקש מהלקוח גם צילום תעודת זהות</span></label>
+  <label class="chk"><input type="checkbox" id="send"><span id="sendLbl">לשלוח ללקוח מייל עם הקישור מיד (בלי לסמן מקום חתימה)</span></label>
+  <div style="margin-top:18px"><button class="btn" id="go">יצירת קישור לחתימה</button></div>
+  <div class="muted" id="status" style="margin-top:12px"></div>
+  <div class="out hide" id="out"></div>
+</div>
+
+<div class="card" id="me">
+  <h2>הפרטים והחתימה שלי</h2>
+  <div class="muted">נכנסים אוטומטית למסמכים במקומות שסימנת "שלי" בדף הסימון.</div>
+  <div class="grid">
+    <div><label for="an">שם</label><input type="text" id="an"></div>
+    <div><label for="aid">תעודת זהות</label><input type="text" id="aid" inputmode="numeric"></div>
+    <div><label for="aph">טלפון</label><input type="text" id="aph"></div>
+    <div><label for="aem">מייל</label><input type="email" id="aem"></div>
+  </div>
+  <label for="aof">כתובת המשרד</label><input type="text" id="aof">
+  <label>החתימה שלי</label>
+  <img id="meprev" class="hide" alt="">
+  <canvas id="mepad"></canvas>
+  <div style="margin-top:8px"><button class="btn sec sm" id="meclr" type="button">ניקוי</button>
+    <label class="btn sec sm" style="display:inline-block;margin:0;font-weight:600;cursor:pointer;border-radius:8px">העלאת תמונה של החתימה<input type="file" id="meimg" accept="image/*" style="display:none"></label></div>
+  <div style="margin-top:14px"><button class="btn" id="mesave" type="button">שמירת הפרטים והחתימה</button> <span class="muted" id="memsg"></span></div>
+</div>
+
+<div class="card">
+  <h2>מסמכים שנשלחו <button class="btn sec sm" id="refresh" type="button" style="margin-right:8px">↻ רענון</button> <span class="muted" id="refMsg"></span></h2>
+  <div id="rowsBox"></div>
+</div>
+
+<div class="card">
+  <h2>תבניות שמורות</h2>
+  <div id="tplBox"></div>
+  <div style="margin-top:14px"><button class="btn sec sm" id="clean" type="button">ניקוי קבצים שכבר לא צריך</button> <span class="muted" id="cleanMsg"></span></div>
+</div>
+</div>
+
+</div>
+<script src="api.js?v=1"></script>
+<script>
+var KEY = qp('k'), SITE = '', TPLS = [];
+
+/* ---- עזר לבניית רכיבים ---- */
+function h(tag, props, kids) {
+  var e = document.createElement(tag);
+  Object.keys(props || {}).forEach(function (k) { if (k === 'text') e.textContent = props[k]; else if (k === 'cls') e.className = props[k]; else e.setAttribute(k, props[k]); });
+  (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function signLink_(id, b) { return SITE + (SITE.indexOf('?') >= 0 ? '&' : '?') + 't=' + id + (b === 2 ? '&b=2' : ''); }
+function placeLink_(id) { return 'place.html?k=' + encodeURIComponent(KEY) + '&m=' + encodeURIComponent(id); }
+function copyBtn_(label, url) {
+  var b = h('button', { cls: 'btn sec sm', type: 'button', text: label });
+  b.addEventListener('click', function () {
+    var done = function () { b.textContent = 'הועתק ✓'; setTimeout(function () { b.textContent = label; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(function () { window.prompt('להעתקה: Ctrl+C', url); });
+    else window.prompt('להעתקה: Ctrl+C', url);
+  });
+  return b;
+}
+
+/* ---- טעינה ---- */
+function load_(first) {
+  if (first) { show('vErr', false); show('vLoad'); }
+  return api('apiAdmin', [KEY]).then(function (d) {
+    d = d || {};
+    show('vLoad', false);
+    if (d.denied) { show('vMain', false); show('vDenied'); return; }
+    SITE = d.site || '';
+    if (d.sign && d.sign.name) $('hName').textContent = d.sign.name;
+    TPLS = d.tpls || [];
+    renderSrc_(); renderRows_(d.rows || []); renderTpls_();
+    if (first) { show('vMain'); fillAdv_(d.adv || {}); meSize(); if (location.hash === '#me') $('me').scrollIntoView(); }
+  }).catch(function () {
+    if (first) { show('vLoad', false); show('vErr'); } else $('refMsg').textContent = 'הרענון נכשל';
+  });
+}
+$('reload').addEventListener('click', function () { load_(true); });
+$('refresh').addEventListener('click', function () {
+  var b = this; b.disabled = true; $('refMsg').textContent = '';
+  load_(false).then(function () { b.disabled = false; });
+});
+
+/* ---- רשימת המסמכים ---- */
+function renderRows_(rows) {
+  var box = $('rowsBox'); box.innerHTML = '';
+  if (!rows.length) { box.appendChild(h('p', { cls: 'muted', text: 'עדיין לא נשלחו מסמכים.' })); return; }
+  var t = h('table', {}, [h('tr', {}, ['מסמך', 'לקוח', 'נוצר', 'סטטוס', ''].map(function (x) { return h('th', { text: x }); }))]);
+  rows.forEach(function (r) {
+    var done = r.status === 'נחתם', half = r.status === 'נחתם חלקית';
+    var st = h('td', {}, [h('span', { cls: 'tag' + (done ? ' ok' : half ? ' half' : ''), text: r.status + (r.signed ? ' · ' + r.signed : '') })]);
+    if (!done && r.two) st.appendChild(h('div', { cls: 'muted', text: 'שני לווים' + (r.n2 ? ' · לווה 2: ' + r.n2 : '') }));
+    var act = h('td', { cls: 'act' });
+    var tr = h('tr', { 'data-id': r.id }, [h('td', { text: r.title }), h('td', {}, [r.client, h('div', { cls: 'muted', text: r.email })]), h('td', { cls: 'muted', text: r.created }), st, act]);
+    if (!done) {
+      if (r.two) {
+        if (r.waiting.indexOf(1) >= 0) act.appendChild(copyBtn_('קישור לווה 1', signLink_(r.id, 1)));
+        if (r.waiting.indexOf(2) >= 0) act.appendChild(copyBtn_('קישור לווה 2', signLink_(r.id, 2)));
+      } else act.appendChild(copyBtn_('העתקת קישור', signLink_(r.id, 1)));
+      if (!half) act.appendChild(h('a', { cls: 'lnk', href: placeLink_(r.id), target: '_blank', text: '📍 סימון' }));
+      if (r.email) {
+        var rs = h('button', { cls: 'btn sec sm rs', type: 'button', text: '✉ שליחה שוב' });
+        rs.addEventListener('click', function () { resend_(rs, r.id); });
+        act.appendChild(rs);
+      }
+    }
+    var dl = h('button', { cls: 'btn del sm dl', type: 'button', text: 'מחיקה' });
+    dl.addEventListener('click', function () {
+      if (!window.confirm('למחוק את המסמך מהרשימה? הקישור ללקוח יפסיק לעבוד.')) return;
+      dl.disabled = true;
+      google.script.run.withSuccessHandler(function (x) { if (x && x.ok) tr.parentNode.removeChild(tr); else { dl.disabled = false; window.alert((x && x.msg) || 'המחיקה נכשלה'); } })
+        .withFailureHandler(function () { dl.disabled = false; window.alert('המחיקה נכשלה'); }).deleteDoc(r.id, KEY);
+    });
+    act.appendChild(dl);
+    t.appendChild(tr);
+  });
+  box.appendChild(h('div', { cls: 'tbl' }, [t]));
+}
+function resend_(rs, id) {
+  var note = window.prompt('אפשר להוסיף שורה אישית למייל (או להשאיר ריק):', ''); if (note === null) return;
+  var go = function (extra) {
+    rs.disabled = true; rs.textContent = 'שולח…';
+    google.script.run.withSuccessHandler(function (r) {
+      rs.disabled = false;
+      if (r && r.ok) { rs.textContent = 'נשלח ✓'; return; }
+      if (r && r.need && r.need.indexOf(2) >= 0 && r.need.indexOf(1) < 0 && !extra) {
+        var n2 = window.prompt('השם של לווה 2:', '') || '';
+        var em2 = window.prompt('המייל של ' + (n2 || 'לווה 2') + ' (לשם יישלח הקישור שלו):', '');
+        if (em2) return go({ n2: n2, em2: em2 });
+      }
+      rs.textContent = (r && r.msg) || 'נכשל';
+    }).withFailureHandler(function () { rs.textContent = 'נכשל'; rs.disabled = false; }).sendDoc(id, KEY, note, extra || null);
+  };
+  go(null);
+}
+
+/* ---- תבניות ---- */
+function renderTpls_() {
+  var box = $('tplBox'); box.innerHTML = '';
+  if (!TPLS.length) { box.appendChild(h('p', { cls: 'muted', text: 'אין תבניות. שומרים תבנית מדף סימון החתימה ("💾 שמירה כתבנית").' })); return; }
+  var t = h('table', {}, [h('tr', {}, ['שם', 'מקומות חתימה', 'נוצרה', ''].map(function (x) { return h('th', { text: x }); }))]);
+  TPLS.forEach(function (tp) {
+    var use = h('button', { cls: 'btn sec sm tu', type: 'button', text: 'שימוש' });
+    use.addEventListener('click', function () {
+      $('src').value = tp.id; srcChanged_();
+      $('src').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      $('client').focus({ preventScroll: true });
+    });
+    var del = h('button', { cls: 'btn del sm td', type: 'button', text: 'מחיקה' });
+    var tr = h('tr', { 'data-tid': tp.id }, [h('td', { text: tp.name }), h('td', { cls: 'muted', text: String(tp.n) }), h('td', { cls: 'muted', text: tp.created }), h('td', { cls: 'act' }, [use, del])]);
+    del.addEventListener('click', function () {
+      if (!window.confirm('למחוק את התבנית?')) return;
+      del.disabled = true;
+      google.script.run.withSuccessHandler(function (r) {
+        if (!(r && r.ok)) { del.disabled = false; window.alert((r && r.msg) || 'המחיקה נכשלה'); return; }
+        TPLS = TPLS.filter(function (x) { return x.id !== tp.id; });
+        renderTpls_(); renderSrc_();
+      }).withFailureHandler(function () { del.disabled = false; window.alert('המחיקה נכשלה'); }).deleteTemplate(tp.id, KEY);
+    });
+    t.appendChild(tr);
+  });
+  box.appendChild(h('div', { cls: 'tbl' }, [t]));
+}
+function renderSrc_() {
+  var s = $('src'), cur = s.value;
+  while (s.options.length > 1) s.remove(1);
+  TPLS.forEach(function (tp) {
+    var o = h('option', { value: tp.id, text: 'תבנית: ' + tp.name + ' (' + tp.n + ' מקומות)' });
+    if (tp.two) o.setAttribute('data-two', '1'); if (tp.allowScan) o.setAttribute('data-scan', '1'); if (tp.askId) o.setAttribute('data-askid', '1');
+    s.appendChild(o);
+  });
+  s.value = TPLS.some(function (tp) { return tp.id === cur; }) ? cur : '';
+  show('srcBox', TPLS.length > 0);
+  srcChanged_();
+}
+function srcOpt_() { var s = $('src'); return s && s.value ? s.options[s.selectedIndex] : null; }
+function tplId_() { var o = srcOpt_(); return o ? o.value : ''; }
+function tplTwo_() { var o = srcOpt_(); return !!(o && o.getAttribute('data-two')); }
+function srcChanged_() {
+  var o = srcOpt_(), hn = $('tplHint');
+  show('fileBox', !o);
+  $('sendLbl').textContent = o ? 'לשלוח ללקוח מייל עם הקישור מיד (המקומות כבר מסומנים בתבנית)' : 'לשלוח ללקוח מייל עם הקישור מיד (בלי לסמן מקום חתימה)';
+  $('title').placeholder = o ? 'אם ריק – שם התבנית' : 'למשל: הסכם שכר טרחה';
+  if (o) { $('scan').checked = !!o.getAttribute('data-scan'); $('askid').checked = !!o.getAttribute('data-askid'); }
+  hn.textContent = o && o.getAttribute('data-two') ? 'בתבנית הזו יש מקומות ללווה 2 – צריך למלא למטה גם את השם והמייל של לווה 2.' : '';
+  show('tplHint', !!hn.textContent);
+}
+$('src').addEventListener('change', srcChanged_);
+
+/* ---- מסמך חדש ---- */
+var fields = [{ label: 'שם מלא' }, { label: 'תעודת זהות' }, { label: 'טלפון', type: 'tel' }];
+function draw() {
+  var box = $('fields'); box.innerHTML = '';
+  fields.forEach(function (f, i) {
+    var inp = h('input', { type: 'text' }); inp.value = f.label;
+    inp.addEventListener('input', function () { fields[i].label = inp.value; });
+    var x = h('button', { cls: 'x', type: 'button', text: '✕' });
+    x.addEventListener('click', function () { fields.splice(i, 1); draw(); });
+    box.appendChild(h('div', { cls: 'row' }, [inp, x]));
+  });
+}
+draw();
+$('add').addEventListener('click', function () { fields.push({ label: '' }); draw(); });
+$('file').addEventListener('change', function () {
+  var f = this.files[0];
+  if (f && !$('title').value) $('title').value = f.name.replace(/\.pdf$/i, '');
+});
+$('go').addEventListener('click', function () {
+  var btn = this, st = $('status'), out = $('out');
+  var f = $('file').files[0];
+  var title = $('title').value.trim(), client = $('client').value.trim(), email = $('email').value.trim();
+  var send = $('send').checked, tpl = tplId_(), em2 = $('em2').value.trim();
+  if (!tpl) {
+    if (!f) { st.textContent = 'צריך לבחור קובץ PDF.'; return; }
+    if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { st.textContent = 'אפשר להעלות רק קובץ PDF.'; return; }
+    if (f.size > 4 * 1024 * 1024) { st.textContent = 'הקובץ גדול מדי. עד 4 מגה.'; return; }
+    if (!title) { st.textContent = 'צריך לכתוב שם למסמך.'; return; }
+  }
+  var mailOk = function (x) { return /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(x); };
+  if (send && !mailOk(email)) { st.textContent = 'כדי לשלוח מייל צריך כתובת מייל תקינה.'; return; }
+  if (send && tplTwo_() && !mailOk(em2)) { st.textContent = 'בתבנית יש מקומות ללווה 2 – כדי לשלוח צריך גם את המייל שלו.'; return; }
+  btn.disabled = true; out.classList.add('hide'); st.textContent = tpl ? 'יוצר…' : 'מעלה…';
+  var call = function (b64) {
+    google.script.run.withSuccessHandler(function (r) {
+      btn.disabled = false;
+      if (!r || !r.ok) { st.textContent = (r && r.msg) || 'ההעלאה נכשלה.'; return; }
+      st.textContent = r.sent ? 'הקישור נוצר ונשלח ל-' + r.sent + '.' : r.sendErr ? 'הקישור נוצר, אבל לא נשלח: ' + r.sendErr : 'הקישור נוצר.';
+      out.classList.remove('hide'); out.innerHTML = '';
+      var links = r.two ? [['קישור ללווה 1', r.url], ['קישור ללווה 2', r.url + '&b=2']] : [['קישור לחתימה', r.url]];
+      links.forEach(function (l) {
+        out.appendChild(h('b', { text: l[0] + ':' })); out.appendChild(h('br'));
+        out.appendChild(document.createTextNode(l[1])); out.appendChild(h('br'));
+        var c = copyBtn_('העתקה', l[1]); c.style.margin = '6px 0 10px'; out.appendChild(c); out.appendChild(h('br'));
+      });
+      out.appendChild(h('a', { cls: 'lnk', href: placeLink_(r.id), target: '_blank', text: tpl ? '📍 לבדיקה או לשינוי מקומות החתימה' : '📍 סימון מקום החתימה על המסמך' }));
+      // מנקים את פרטי הלקוח, כדי שהמסמך הבא לא יישלח בטעות לאותו לקוח
+      ['title', 'client', 'email', 'n2', 'em2'].forEach(function (k) { $(k).value = ''; });
+      $('file').value = ''; $('send').checked = false;
+      load_(false);
+    }).withFailureHandler(function (e) { st.textContent = 'ההעלאה נכשלה: ' + (e && e.message ? e.message : ''); btn.disabled = false; })
+      .createDoc({ key: KEY, tpl: tpl, title: title, client: client, email: email, n2: $('n2').value.trim(), em2: em2,
+        fields: fields.filter(function (x) { return x.label; }), pdf: b64,
+        send: send, allowScan: $('scan').checked, askId: $('askid').checked });
+  };
+  if (tpl) return call('');
+  var rd = new FileReader();
+  rd.onload = function () { call(String(rd.result).split(',')[1]); };
+  rd.readAsDataURL(f);
+});
+
+/* ---- הפרטים והחתימה שלי ---- */
+var mePad = $('mepad'), meX = mePad.getContext('2d'), meDraw = false, meAny = false, meImg = null;
+function fillAdv_(a) {
+  $('an').value = a.n || ''; $('aid').value = a.id || ''; $('aph').value = a.ph || ''; $('aem').value = a.em || ''; $('aof').value = a.office || '';
+  if (a.sig) { $('meprev').src = a.sig; show('meprev'); }
+}
+function meSize() {
+  var r = mePad.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  mePad.width = r.width * d; mePad.height = r.height * d; meX.setTransform(d, 0, 0, d, 0, 0);
+  meX.lineWidth = 2.6; meX.lineCap = 'round'; meX.lineJoin = 'round'; meX.strokeStyle = '#13303a'; meAny = false;
+}
+function mePt(e) { var r = mePad.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+mePad.addEventListener('pointerdown', function (e) { meDraw = true; mePad.setPointerCapture(e.pointerId); var p = mePt(e); meX.beginPath(); meX.moveTo(p.x, p.y); });
+mePad.addEventListener('pointermove', function (e) { if (!meDraw) return; var p = mePt(e); meX.lineTo(p.x, p.y); meX.stroke(); meAny = true; meImg = null; });
+mePad.addEventListener('pointerup', function () { meDraw = false; });
+$('meclr').addEventListener('click', function () { meSize(); meImg = null; $('meimg').value = ''; });
+// חיתוך השוליים הריקים והקטנה – כדי שהחתימה תישמר קטנה וחדה
+function meTrim(src) {
+  var w = src.width, hh = src.height, d = src.getContext('2d').getImageData(0, 0, w, hh).data, x0 = w, y0 = hh, x1 = 0, y1 = 0;
+  for (var y = 0; y < hh; y++) for (var x = 0; x < w; x++) { var i = (y * w + x) * 4; if (d[i + 3] > 20 && !(d[i] > 235 && d[i + 1] > 235 && d[i + 2] > 235)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+  if (x1 <= x0 || y1 <= y0) return null;
+  var cw = x1 - x0 + 1, ch = y1 - y0 + 1, r = Math.min(1, 600 / cw, 220 / ch);
+  var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(cw * r)); c.height = Math.max(1, Math.round(ch * r));
+  c.getContext('2d').drawImage(src, x0, y0, cw, ch, 0, 0, c.width, c.height);
+  return c.toDataURL('image/png');
+}
+// תמונה של חתימה על נייר: רקע לבן הופך לשקוף
+function meFromImage(file, cb) {
+  var url = URL.createObjectURL(file), im = new Image();
+  im.onload = function () {
+    var r = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight));
+    var c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * r); c.height = Math.round(im.naturalHeight * r);
+    var g = c.getContext('2d'); g.drawImage(im, 0, 0, c.width, c.height);
+    var data = g.getImageData(0, 0, c.width, c.height), a = data.data;
+    for (var i = 0; i < a.length; i += 4) { var l = (a[i] + a[i + 1] + a[i + 2]) / 3; if (l > 200) a[i + 3] = 0; else { a[i] = 19; a[i + 1] = 48; a[i + 2] = 58; a[i + 3] = 255; } }
+    g.putImageData(data, 0, 0); URL.revokeObjectURL(url); cb(meTrim(c));
+  };
+  im.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+  im.src = url;
+}
+$('meimg').addEventListener('change', function () {
+  var f = this.files[0]; if (!f) return;
+  meFromImage(f, function (u) {
+    if (!u) { $('memsg').textContent = 'לא הצלחתי לקרוא את התמונה.'; return; }
+    meImg = u; meSize(); $('meprev').src = u; show('meprev');
+  });
+});
+$('mesave').addEventListener('click', function () {
+  var b = this, m = $('memsg');
+  var sig = meImg || (meAny ? meTrim(mePad) : null);
+  var data = { key: KEY, n: $('an').value, id: $('aid').value, ph: $('aph').value, em: $('aem').value, office: $('aof').value };
+  if (sig) data.sig = sig; else data.keepSig = true;
+  b.disabled = true; m.textContent = 'שומר…';
+  google.script.run.withSuccessHandler(function (r) {
+    b.disabled = false;
+    if (r && r.ok) { m.textContent = 'נשמר ✓'; if (sig) { $('meprev').src = sig; show('meprev'); meSize(); meImg = null; } }
+    else m.textContent = (r && r.msg) || 'השמירה נכשלה';
+  }).withFailureHandler(function () { b.disabled = false; m.textContent = 'השמירה נכשלה'; }).saveAdvisor(data);
+});
+
+$('clean').addEventListener('click', function () {
+  var b = this, m = $('cleanMsg'); b.disabled = true; m.textContent = 'מנקה…';
+  google.script.run.withSuccessHandler(function (r) { b.disabled = false; m.textContent = r && r.ok ? 'נוקו ' + r.n + ' חלקי קבצים.' : ((r && r.msg) || 'הניקוי נכשל'); })
+    .withFailureHandler(function () { b.disabled = false; m.textContent = 'הניקוי נכשל'; }).cleanupFiles(KEY);
+});
+
+load_(true);
+</script>
+</body>
+</html>

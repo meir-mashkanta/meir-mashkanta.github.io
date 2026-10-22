@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>סימון מקום החתימה</title>
+<style>
+  :root { --teal: #0F4C5C; --copper: #B0682F; --ink:#20323a; --line:#e3e8ea; --bg:#f6f8f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:'Segoe UI',Arial,Helvetica,sans-serif; font-size:16px; line-height:1.5; }
+  header { background:var(--teal); color:#fff; padding:14px 16px; position:sticky; top:0; z-index:20; }
+  header .in { max-width:900px; margin:0 auto; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  header .t { flex:1; min-width:200px; font-weight:700; }
+  header .s { color:#cfe0e5; font-size:13px; font-weight:400; }
+  button { font-family:inherit; font-size:15px; border-radius:8px; cursor:pointer; }
+  .btn { background:var(--copper); color:#fff; border:0; padding:9px 18px; font-weight:700; }
+  .btn.sec { background:#fff; color:var(--teal); border:1px solid #fff; padding:8px 12px; font-weight:600; }
+  .wrap { max-width:900px; margin:0 auto; padding:16px; }
+  .pg { position:relative; margin:0 auto 14px; border:1px solid var(--line); background:#fff; cursor:crosshair; touch-action:manipulation; }
+  .pg canvas { width:100%; height:auto; display:block; }
+  .pn { position:absolute; top:4px; left:6px; background:rgba(15,76,92,.8); color:#fff; font-size:12px; padding:1px 8px; border-radius:10px; pointer-events:none; }
+  .box { position:absolute; border:2px dashed var(--copper); background:rgba(176,104,47,.14); color:var(--copper); font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:move; touch-action:none; user-select:none; }
+  .box .x { position:absolute; top:-12px; right:-12px; width:24px; height:24px; border-radius:50%; background:#fff; border:1px solid var(--copper); color:var(--copper); font-size:13px; line-height:1; padding:0; cursor:pointer; }
+  .box .rs { position:absolute; right:-10px; bottom:-10px; width:20px; height:20px; background:var(--copper); border:2px solid #fff; border-radius:50%; cursor:nwse-resize; touch-action:none; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .box.b2 .rs { background:#1b7f8c; } .box.me .rs { background:#6b5ca5; } .box.fx .rs { background:#7d8b91; }
+  .box.sel { border-style:solid; background:rgba(176,104,47,.26); box-shadow:0 0 0 3px rgba(176,104,47,.35); }
+  .box .lb { pointer-events:none; padding:0 4px; text-align:center; overflow:hidden; font-size:12px; line-height:1.15; white-space:nowrap; text-overflow:ellipsis; max-width:100%; }
+  .box.b2 { border-color:#1b7f8c; background:rgba(27,127,140,.14); color:#1b7f8c; }
+  .box.b2.sel { background:rgba(27,127,140,.26); box-shadow:0 0 0 3px rgba(27,127,140,.35); }
+  .box.me { border-color:#6b5ca5; background:rgba(107,92,165,.12); color:#6b5ca5; }
+  .box.me.sel { background:rgba(107,92,165,.24); box-shadow:0 0 0 3px rgba(107,92,165,.3); }
+  .box.fx { border-color:#7d8b91; background:rgba(125,139,145,.12); color:#56656a; }
+  #warn { display:none; background:#fff4e5; border-bottom:2px solid var(--copper); color:#7a4a1e; padding:8px 16px; font-size:14px; }
+  #warn a { color:var(--copper); font-weight:700; }
+  #tool label { display:flex; gap:6px; align-items:center; font-size:14px; }
+  #tool { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:2px solid var(--copper); padding:10px 14px; z-index:30; display:none; }
+  #tool .in { max-width:900px; margin:0 auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  #tool select, #tool input { padding:9px 10px; border:1px solid #c9d4d8; border-radius:8px; font-size:15px; font-family:inherit; }
+  #tool input { flex:1; min-width:160px; }
+  header select { padding:8px; border-radius:8px; border:1px solid #fff; font-size:14px; font-family:inherit; }
+  .msg { color:#fff; font-size:14px; }
+  .spin { text-align:center; color:#5b6e76; padding:40px; }
+  .hide { display:none !important; }
+  .msgbox { max-width:600px; margin:40px auto; background:#fff; border:1px solid var(--line); border-radius:12px; padding:24px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="msgbox" id="vLoad"><div class="spin">טוען…</div></div>
+<div class="msgbox hide" id="vErr"><p>לא הצלחנו לטעון את הדף.</p><button class="btn" id="reload" type="button">לנסות שוב</button></div>
+<div class="msgbox hide" id="vMsg"><p id="vMsgT"></p></div>
+<div id="vMain" class="hide">
+<header><div class="in">
+  <div class="t">סימון מקום החתימה · <span id="dTitle"></span><div class="s">לוחצים על המסמך איפה שהלקוח צריך לחתום. אפשר לגרור, להגדיל/להקטין בעיגול שבפינה, ולמחוק ב-✕. כל שינוי נשמר אוטומטית.<span id="sendTo"></span></div></div>
+  <select id="ntype" title="סוג מסגרת חדשה"><optgroup label="הלקוח חותם או ממלא"><option value="c">חתימה או הקלדה (הלקוח בוחר)</option><option value="s">חתימה בלבד</option><option value="t">שדה להקלדה</option><option value="x">סימון ✓</option></optgroup><optgroup label="פרטי הלקוח – ממולאים מכרטיס הלקוח"><option value="d:n">שם</option><option value="d:id">תעודת זהות</option><option value="d:ph">טלפון</option><option value="d:em">מייל</option><option value="d:addr">כתובת</option><option value="d:city">עיר</option><option value="d:date">תאריך החתימה</option></optgroup><optgroup label="שלי – נכנס אוטומטית"><option value="a:sig">החתימה שלי</option><option value="a:n">השם שלי</option><option value="a:id">הת״ז שלי</option><option value="a:ph">הטלפון שלי</option><option value="a:em">המייל שלי</option><option value="a:office">כתובת המשרד</option><option value="a:date">תאריך (שלי)</option></optgroup><optgroup label="אחר"><option value="f">טקסט קבוע (אני כותב)</option></optgroup></select>
+  <select id="nb" title="של איזה לווה"><option value="1" id="nb1">לווה 1</option><option value="2" id="nb2">לווה 2</option></select>
+  <button class="btn sec" id="sz" type="button">גודל: בינוני</button>
+  <button class="btn" id="save" type="button">שמירה</button>
+  <button class="btn sec" id="tpl" type="button">💾 שמירה כתבנית</button>
+  <button class="btn sec" id="send" type="button">✉ שליחה ללקוח</button>
+  <span class="msg" id="msg"></span>
+</div></header>
+<div id="warn"></div>
+<div id="tool"><div class="in"><b>מסגרת נבחרת:</b>
+  <select id="tt"><optgroup label="הלקוח חותם או ממלא"><option value="c">חתימה או הקלדה (הלקוח בוחר)</option><option value="s">חתימה בלבד</option><option value="t">שדה להקלדה</option><option value="x">סימון ✓</option></optgroup><optgroup label="פרטי הלקוח – ממולאים מכרטיס הלקוח"><option value="d:n">שם</option><option value="d:id">תעודת זהות</option><option value="d:ph">טלפון</option><option value="d:em">מייל</option><option value="d:addr">כתובת</option><option value="d:city">עיר</option><option value="d:date">תאריך החתימה</option></optgroup><optgroup label="שלי – נכנס אוטומטית"><option value="a:sig">החתימה שלי</option><option value="a:n">השם שלי</option><option value="a:id">הת״ז שלי</option><option value="a:ph">הטלפון שלי</option><option value="a:em">המייל שלי</option><option value="a:office">כתובת המשרד</option><option value="a:date">תאריך (שלי)</option></optgroup><optgroup label="אחר"><option value="f">טקסט קבוע (אני כותב)</option></optgroup></select>
+  <select id="tb"><option value="1">לווה 1</option><option value="2">לווה 2</option></select>
+  <input type="text" id="tv" placeholder="" autocomplete="off">
+  <label id="tol"><input type="checkbox" id="to"> רשות (לא חובה)</label>
+  <button class="btn" id="tdel" type="button" style="background:#9a2b2b">מחיקה</button><button class="btn sec" id="tok" type="button" style="color:var(--teal);border-color:var(--teal)">סגירה</button></div></div>
+<div class="wrap" style="padding-bottom:90px"><div id="pages"><div class="spin">טוען את המסמך…</div></div></div>
+</div>
+<script src="api.js?v=1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+function load_() {
+  show('vErr', false); show('vLoad', true);
+  var KEY = qp('k');
+  api('apiPlace', [KEY, qp('m')]).then(function (data) {
+    data = data || {};
+    show('vLoad', false);
+    var msg = data.denied ? 'אין הרשאה לדף הזה.' : !data.doc ? 'המסמך לא נמצא.' : data.doc.done ? 'כבר התחילו לחתום על המסמך הזה, ולכן אי אפשר לשנות בו את המקומות.' : '';
+    if (msg) { $('vMsgT').textContent = msg; show('vMsg'); return; }
+    var DOC = data.doc;
+    document.title = 'סימון מקום החתימה · ' + DOC.title;
+    $('dTitle').textContent = DOC.title;
+    $('sendTo').textContent = DOC.email ? ' · יישלח ל: ' + DOC.email : '';
+    $('nb1').textContent = 'לווה 1' + (DOC.n1 ? ': ' + DOC.n1 : '');
+    $('nb2').textContent = 'לווה 2' + (DOC.n2 ? ': ' + DOC.n2 : '');
+    show('vMain');
+    start_(DOC, KEY);
+  }).catch(function () { show('vLoad', false); show('vErr'); });
+}
+$('reload').addEventListener('click', load_);
+load_();
+
+function start_(DOC, KEY) {
+function fetchPdf(id, cb, fail) {
+  var dead = false;
+  function call(off, ok, tries) {
+    google.script.run.withSuccessHandler(function (r) {
+      if (dead) return;
+      if (r && r.ok) return ok(r);
+      if ((tries || 0) < 2 && !(r && r.missing)) return call(off, ok, (tries || 0) + 1);
+      dead = true; fail(r && r.missing ? 'missing' : 'bad');
+    }).withFailureHandler(function () {
+      if (dead) return;
+      if ((tries || 0) < 2) return setTimeout(function () { call(off, ok, (tries || 0) + 1); }, 800);
+      dead = true; fail('err');
+    }).loadPdfPart(id, off);
+  }
+  call(0, function (r0) {
+    var offs = [], got = {}, left, next = 0;
+    for (var o = r0.k; o < r0.n; o += r0.k) offs.push(o);
+    if (!offs.length) return cb({ pdf: r0.d });
+    left = offs.length;
+    (function pump() {
+      while (next < offs.length && (next - (offs.length - left)) < 4) {
+        (function (off) {
+          call(off, function (r) {
+            got[off] = r.d; left--;
+            if (!left) cb({ pdf: [r0.d].concat(offs.map(function (x) { return got[x]; })).join('') }); else pump();
+          });
+        })(offs[next++]);
+      }
+    })();
+  });
+}
+function renderW_(box) { return Math.min(1800, Math.max(1000, Math.round((box.clientWidth || 800) * (window.devicePixelRatio || 1)))); }
+var CLIENT_T = ['c', 's', 't', 'x', 'd'];
+var D_LABEL = { n: 'שם', id: 'ת״ז', ph: 'טלפון', em: 'מייל', addr: 'כתובת', city: 'עיר', date: 'תאריך החתימה' };
+var A_LABEL = { sig: 'החתימה שלי', n: 'השם שלי', id: 'הת״ז שלי', ph: 'הטלפון שלי', em: 'המייל שלי', office: 'כתובת המשרד', date: 'תאריך' };
+var sigs = (DOC.sigs || []).map(function (s) {
+  var o = { p: s.p, x: s.x, y: s.y, w: s.w, h: s.h, t: s.t || 'c', l: s.l || '', v: s.v || '' };
+  if (s.b) o.b = Number(s.b); if (s.k) o.k = s.k; if (s.o) o.o = 1;
+  return o;
+});
+var sel = null, dirty = false, saving = false, saveT = null;
+function isClient_(t) { return CLIENT_T.indexOf(t) >= 0; }
+function typeKey_(s) { return s.t === 'd' || s.t === 'a' ? s.t + ':' + (s.k || (s.t === 'd' ? 'n' : 'sig')) : s.t; }
+function setType_(s, v) {
+  var p = String(v).split(':'); s.t = p[0]; if (p[1]) s.k = p[1]; else delete s.k;
+  if (!isClient_(s.t)) delete s.b; else if (!s.b) s.b = 1;
+  if (s.t !== 't' && s.t !== 'd') delete s.o;
+}
+function two_() { return sigs.some(function (s) { return isClient_(s.t) && Number(s.b) === 2; }); }
+function touch_() {
+  dirty = true; document.getElementById('msg').textContent = 'לא נשמר עדיין…';
+  clearTimeout(saveT); saveT = setTimeout(function () { if (dirty && !saving) saveNow_(); }, 1200);
+  warn_();
+}
+window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+var sizes = [['קטן', 0.18], ['בינוני', 0.26], ['גדול', 0.36]], si = 1;
+var wraps = [];
+function b64bytes(b64) { var bin = atob(b64), a = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
+// אזהרה כשמסמנים "שלי" אבל הפרטים או החתימה שלי עוד לא הוגדרו
+function warn_() {
+  var w = document.getElementById('warn'), needSig = false, needInfo = false;
+  sigs.forEach(function (s) { if (s.t === 'a') { if ((s.k || 'sig') === 'sig') needSig = true; else if (s.k !== 'date') needInfo = true; } });
+  var miss = (needSig && !DOC.advSig ? ['החתימה שלך'] : []).concat(needInfo && !DOC.advInfo ? ['הפרטים שלך'] : []);
+  if (!miss.length) { w.style.display = 'none'; return; }
+  w.innerHTML = '';
+  w.appendChild(document.createTextNode('סימנת מקומות "שלי", אבל ' + miss.join(' ו') + ' עוד לא נשמרו, אז הם לא ייכנסו למסמך. '));
+  var a = document.createElement('a'); a.href = 'admin.html?k=' + encodeURIComponent(KEY) + '#me'; a.target = '_blank'; a.textContent = 'להגדרת הפרטים והחתימה שלי ←';
+  w.appendChild(a); w.style.display = 'block';
+}
+function boxText_(s) {
+  var opt = s.o ? ' (רשות)' : '', who = isClient_(s.t) && two_() ? 'לווה ' + (Number(s.b) || 1) + ' · ' : '';
+  if (s.t === 's') return who + 'חתימה';
+  if (s.t === 't') return who + 'הקלדה: ' + (s.l || '') + opt;
+  if (s.t === 'x') return who + '✓';
+  if (s.t === 'd') return who + (s.l || D_LABEL[s.k || 'n']) + ' (מכרטיס הלקוח)' + opt;
+  if (s.t === 'a') return 'שלי: ' + A_LABEL[s.k || 'sig'];
+  if (s.t === 'f') return s.v || 'טקסט קבוע';
+  return who + 'חתימה / הקלדה';
+}
+function render() {
+  wraps.forEach(function (w, p) {
+    [].slice.call(w.querySelectorAll('.box')).forEach(function (b) { b.remove(); });
+    sigs.forEach(function (s, k) { if (s.p !== p) return; addBox(w, s, k); });
+  });
+}
+function addBox(w, s, k) {
+  var b = document.createElement('div');
+  b.style.left = (s.x * 100) + '%'; b.style.top = (s.y * 100) + '%'; b.style.width = (s.w * 100) + '%'; b.style.height = (s.h * 100) + '%';
+  b.className = 'box' + (s.t === 'a' ? ' me' : s.t === 'f' ? ' fx' : Number(s.b) === 2 ? ' b2' : '') + (sel === s ? ' sel' : '');
+  var lb = document.createElement('span'); lb.className = 'lb';
+  lb.textContent = boxText_(s); b.title = lb.textContent;
+  b.appendChild(lb);
+  var x = document.createElement('button'); x.className = 'x'; x.type = 'button'; x.textContent = '✕';
+  x.addEventListener('click', function (e) { e.stopPropagation(); sigs.splice(k, 1); if (sel === s) { sel = null; document.getElementById('tool').style.display = 'none'; } render(); touch_(); });
+  x.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  b.appendChild(x);
+  var rs = document.createElement('div'); rs.className = 'rs'; b.appendChild(rs);
+  var rz = null;
+  rs.addEventListener('pointerdown', function (e) { e.stopPropagation(); rs.setPointerCapture(e.pointerId); var r = w.getBoundingClientRect(); rz = { mx: e.clientX, my: e.clientY, w: s.w, h: s.h, W: r.width, H: r.height }; });
+  rs.addEventListener('pointermove', function (e) {
+    if (!rz) return;
+    s.w = Math.min(1 - s.x, Math.max(0.015, rz.w + (e.clientX - rz.mx) / rz.W));
+    s.h = Math.min(1 - s.y, Math.max(0.01, rz.h + (e.clientY - rz.my) / rz.H));
+    b.style.width = (s.w * 100) + '%'; b.style.height = (s.h * 100) + '%';
+  });
+  rs.addEventListener('pointerup', function () { if (rz) touch_(); rz = null; });
+  rs.addEventListener('click', function (e) { e.stopPropagation(); });
+  var st = null;
+  b.addEventListener('pointerdown', function (e) { e.stopPropagation(); b.setPointerCapture(e.pointerId); var r = w.getBoundingClientRect(); st = { mx: e.clientX, my: e.clientY, x: s.x, y: s.y, W: r.width, H: r.height }; });
+  b.addEventListener('pointermove', function (e) {
+    if (!st) return;
+    s.x = Math.min(1 - s.w, Math.max(0, st.x + (e.clientX - st.mx) / st.W));
+    s.y = Math.min(1 - s.h, Math.max(0, st.y + (e.clientY - st.my) / st.H));
+    b.style.left = (s.x * 100) + '%'; b.style.top = (s.y * 100) + '%';
+  });
+  b.addEventListener('pointerup', function () { if (st && (s.x !== st.x || s.y !== st.y)) touch_(); st = null; });
+  b.addEventListener('click', function (e) { e.stopPropagation(); select_(s); });
+  w.appendChild(b);
+}
+document.getElementById('sz').addEventListener('click', function () {
+  si = (si + 1) % sizes.length; this.textContent = 'גודל: ' + sizes[si][0];
+});
+document.getElementById('save').addEventListener('click', function () {
+  var btn = this; btn.disabled = true;
+  saveNow_(function () { btn.disabled = false; }, function () { btn.disabled = false; });
+});
+function select_(s) {
+  sel = s; var t = document.getElementById('tool'); t.style.display = 'block';
+  document.getElementById('tt').value = typeKey_(s);
+  syncTool_(); render();
+}
+function syncTool_() {
+  var s = sel; if (!s) return; var tv = document.getElementById('tv');
+  document.getElementById('tb').style.display = isClient_(s.t) ? '' : 'none';
+  document.getElementById('tb').value = String(Number(s.b) || 1);
+  tv.style.display = (s.t === 't' || s.t === 'f' || s.t === 'd') ? '' : 'none';
+  tv.placeholder = s.t === 't' ? 'שם השדה (למשל: תעודת זהות, תאריך)' : s.t === 'd' ? 'כותרת שהלקוח יראה (לא חובה)' : 'הטקסט שיוטבע במסמך';
+  tv.value = s.t === 'f' ? (s.v || '') : (s.l || '');
+  document.getElementById('tol').style.display = (s.t === 't' || s.t === 'd') ? '' : 'none';
+  document.getElementById('to').checked = !!s.o;
+}
+document.getElementById('tt').addEventListener('change', function () { if (!sel) return; setType_(sel, this.value); syncTool_(); render(); touch_(); });
+document.getElementById('tb').addEventListener('change', function () { if (!sel) return; sel.b = Number(this.value) === 2 ? 2 : 1; render(); touch_(); });
+document.getElementById('to').addEventListener('change', function () { if (!sel) return; if (this.checked) sel.o = 1; else delete sel.o; render(); touch_(); });
+document.getElementById('tv').addEventListener('input', function () { if (!sel) return; if (sel.t === 'f') sel.v = this.value; else sel.l = this.value; render(); touch_(); });
+document.getElementById('tdel').addEventListener('click', function () { var k = sigs.indexOf(sel); if (k >= 0) sigs.splice(k, 1); sel = null; document.getElementById('tool').style.display = 'none'; render(); touch_(); });
+document.getElementById('tok').addEventListener('click', function () { sel = null; document.getElementById('tool').style.display = 'none'; render(); });
+function saveNow_(cb, bad) {
+  var m = document.getElementById('msg'); m.textContent = 'שומר…';
+  clearTimeout(saveT); saving = true;
+  var snap = JSON.stringify(sigs);
+  google.script.run.withSuccessHandler(function (r) {
+    saving = false;
+    if (r && r.ok) { if (JSON.stringify(sigs) === snap) dirty = false; m.textContent = 'נשמר ✓ (' + sigs.length + ' מקומות)'; if (dirty) touch_(); cb && cb(); }
+    else { m.textContent = (r && r.msg) || 'השמירה נכשלה'; bad && bad(); }
+  }).withFailureHandler(function () { saving = false; m.textContent = 'השמירה נכשלה – לנסות שוב'; bad && bad(); }).saveSigs(DOC.id, KEY, sigs);
+}
+document.getElementById('tpl').addEventListener('click', function () {
+  var name = window.prompt('שם התבנית (למשל: הסכם מכירה, טופס בנק):', DOC.title || ''); if (!name) return;
+  saveNow_(function () {
+    var m = document.getElementById('msg');
+    google.script.run.withSuccessHandler(function (r) { m.textContent = r && r.ok ? 'נשמר כתבנית ✓' : ((r && r.msg) || 'שמירת התבנית נכשלה'); })
+      .withFailureHandler(function () { m.textContent = 'שמירת התבנית נכשלה'; }).saveTemplate(DOC.id, KEY, name);
+  });
+});
+function sendNow_(note, extra) {
+  var m = document.getElementById('msg'); m.textContent = 'שולח…';
+  google.script.run.withSuccessHandler(function (r) {
+    if (r && r.ok) { m.textContent = 'נשלח ל-' + r.to + ' ✓'; return; }
+    if (r && r.need && r.need.indexOf(2) >= 0 && !extra) {
+      // חסר מייל של לווה 2 – שואלים ושולחים שוב
+      var n2 = DOC.n2 || window.prompt('השם של לווה 2:', '') || '';
+      var em2 = window.prompt('המייל של ' + (n2 || 'לווה 2') + ' (לשם יישלח הקישור שלו):', DOC.em2 || '');
+      if (!em2) { m.textContent = 'לא נשלח – חסר מייל של לווה 2'; return; }
+      DOC.n2 = n2; DOC.em2 = em2;
+      return sendNow_(note, { n2: n2, em2: em2 });
+    }
+    m.textContent = (r && r.msg) || 'השליחה נכשלה';
+  }).withFailureHandler(function () { m.textContent = 'השליחה נכשלה'; }).sendDoc(DOC.id, KEY, note, extra || null);
+}
+document.getElementById('send').addEventListener('click', function () {
+  if (!sigs.length && !window.confirm('לא סימנת מקומות במסמך. הלקוח יחתום בדף נפרד שיתווסף בסוף המסמך. לשלוח בכל זאת?')) return;
+  var note = window.prompt('אפשר להוסיף שורה אישית למייל שיישלח ללקוח (או להשאיר ריק):', ''); if (note === null) return;
+  saveNow_(function () { sendNow_(note, null); });
+});
+// גודל התחלתי לפי סוג המסגרת: חתימה רחבה, שדה טקסט צר, סימון ✓ ריבוע קטן
+function newSize_(t, k, r) {
+  if (t === 'x') { var q = 0.028; return { w: q, h: q * r.width / r.height }; }
+  var sig = t === 'c' || t === 's' || (t === 'a' && (k || 'sig') === 'sig');
+  var ww = sig ? sizes[si][1] : Math.max(0.12, sizes[si][1] * 0.8);
+  return { w: ww, h: ww * r.width * (sig ? 0.36 : 0.13) / r.height };
+}
+fetchPdf(DOC.id, function (res) {
+  var box = document.getElementById('pages');
+  if (!res || !res.pdf) { box.innerHTML = '<div class="spin">המסמך לא נמצא.</div>'; return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  pdfjsLib.getDocument({ data: b64bytes(res.pdf), standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/', cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/', cMapPacked: true, disableFontFace: true }).promise.then(function (pdf) {
+    box.innerHTML = '';
+    var n = 1;
+    (function next() {
+      if (n > pdf.numPages) { render(); warn_(); return; }
+      pdf.getPage(n).then(function (page) {
+        var vp = page.getViewport({ scale: renderW_(box) / page.getViewport({ scale: 1 }).width }), idx = n - 1;
+        var w = document.createElement('div'); w.className = 'pg';
+        var c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+        var pn = document.createElement('div'); pn.className = 'pn'; pn.textContent = 'עמוד ' + n;
+        w.appendChild(c); w.appendChild(pn); box.appendChild(w); wraps[idx] = w;
+        w.addEventListener('click', function (e) {
+          // כשמסגרת פתוחה לעריכה – לחיצה על המסמך רק סוגרת אותה
+          if (sel) { sel = null; document.getElementById('tool').style.display = 'none'; render(); return; }
+          var r = w.getBoundingClientRect(), tv = String(document.getElementById('ntype').value).split(':');
+          var sz = newSize_(tv[0], tv[1], r);
+          var x = Math.min(1 - sz.w, Math.max(0, (e.clientX - r.left) / r.width - sz.w / 2));
+          var y = Math.min(1 - sz.h, Math.max(0, (e.clientY - r.top) / r.height - sz.h / 2));
+          var ns = { p: idx, x: x, y: y, w: sz.w, h: sz.h, t: 'c', l: '', v: '' };
+          setType_(ns, document.getElementById('ntype').value);
+          if (isClient_(ns.t)) ns.b = Number(document.getElementById('nb').value) === 2 ? 2 : 1;
+          sigs.push(ns); sel = ns; render(); select_(ns); touch_();
+        });
+        page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () { n++; next(); });
+      });
+    })();
+  }).catch(function () { box.innerHTML = '<div class="spin">לא הצלחנו להציג את המסמך.</div>'; });
+}, function (m) { document.getElementById('pages').innerHTML = '<div class="spin">' + (m === 'missing' ? 'הקובץ של המסמך הזה כבר לא שמור.' : 'לא הצלחנו לטעון את המסמך. אפשר לרענן את הדף.') + '</div>'; });
+}
+</script>
+</body>
+</html>

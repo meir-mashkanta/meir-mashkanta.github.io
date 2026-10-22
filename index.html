@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מאיר אייזנבאך · יעוץ משכנתאות</title>
+<script>
+// הכתובת הראשית מפנה לדף הנכון לפי הפרמטרים – אותו מבנה קישור כמו בדפים הקודמים בגוגל
+(function () {
+  var q = location.search, p = new URLSearchParams(q);
+  var page = p.get('t') ? 'sign.html' : p.get('m') ? 'place.html' : p.get('k') ? 'admin.html' : 'sign.html';
+  location.replace(page + q + location.hash);
+})();
+</script>
+</head>
+<body></body>
+</html>
