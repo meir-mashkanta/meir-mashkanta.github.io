@@ -2,6 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='414 14 156 156' fill='none' stroke-linecap='round' stroke-linejoin='round'><rect x='414' y='14' width='156' height='156' rx='32' fill='%23fff'/><path d='M425 77 L482 30 L559 81 L559 140' stroke='%23c98d5f' stroke-width='4'/><circle cx='459' cy='60' r='13.6' stroke='%23fff' stroke-width='12'/><circle cx='459' cy='60' r='13.6' stroke='%23b8692f' stroke-width='6'/><path d='M434.8 145V105A25 23 0 0 1 484.8 105V145' stroke='%23b8692f' stroke-width='6'/><circle cx='499.5' cy='52.5' r='15' stroke='%23fff' stroke-width='12'/><circle cx='499.5' cy='52.5' r='15' stroke='%23134a4c' stroke-width='6.4'/><path d='M470.8 145V100A29.2 25.5 0 0 1 529.2 100V145' stroke='%23fff' stroke-width='12'/><path d='M470.8 145V100A29.2 25.5 0 0 1 529.2 100V145' stroke='%23134a4c' stroke-width='6.4'/></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>בדיקת כדאיות מחזור משכנתא | מאיר אייזנבאך – יעוץ משכנתאות</title>
 <style>
@@ -235,6 +236,9 @@ function renderBank(k){
   document.getElementById('bName').textContent=B.name;
   document.getElementById('bIcons').innerHTML=B.icons.map(i=>
     `<a class="iconlink" href="${i.url}" target="_blank" rel="noopener"><img src="${IC[i.img]}" alt="${B.name}"><span class="hand">👆</span>${i.cap?'<div style="margin-top:8px">'+i.cap+'</div>':''}</a>`).join('');
+  {const HOME={leumi:'https://www.leumi.co.il/',poalim:'https://www.bankhapoalim.co.il/',discount:'https://www.discountbank.co.il/',mercantile:'https://www.mercantile.co.il/',tfahot:'https://www.mizrahi-tefahot.co.il/',beinleumi:'https://www.fibi.co.il/',pagi:'https://www.pagi.co.il/',otzar:'https://www.bankotsar.co.il/',massad:'https://www.bankmassad.co.il/',jerusalem:'https://www.bankjerusalem.co.il/'};
+  let alt=document.getElementById('bAlt');if(!alt){alt=document.createElement('div');alt.id='bAlt';alt.style.cssText='background:#fff4e5;color:#7a4a1c;border-radius:10px;padding:10px 14px;margin:14px 0;font-weight:600;line-height:1.6';document.getElementById('bIcons').after(alt);}
+  alt.innerHTML='הדף של הבנק לא נפתח או נשאר ריק? <a href="'+(HOME[k]||'#')+'" target="_blank" style="color:#0f4c5c">לחצו כאן לאתר הראשי של הבנק</a> ושם לחצו על "כניסה לחשבון". אפשר גם להיכנס דרך האפליקציה של הבנק בטלפון, או להתקשר אליי: <a href="tel:0548595949" style="color:#0f4c5c;white-space:nowrap">054-859-5949</a>';}
   document.getElementById('bWays').innerHTML=B.ways.map(w=>{
     if(w.phone) return `<div class="way"><h3>${w.t}</h3><a class="phone" dir="ltr" style="text-decoration:none" href="tel:${w.phone.replace('*','%2A')}">${w.phone}</a></div>`;
     return `<div class="way"><h3>${w.t}</h3>${w.p?'<p>'+w.p+'</p>':''}${w.path?'<ol class="path">'+w.path.map(s=>'<li>'+s+'</li>').join('')+'</ol>':''}${w.after?'<div class="note">'+w.after+'</div>':''}</div>`;
