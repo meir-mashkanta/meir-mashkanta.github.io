@@ -310,5 +310,13 @@ function send(){
 window.addEventListener('hashchange',route); route();
 window.addEventListener('pagehide',()=>sendLead('יצא מהדף'));
 </script>
+<script>
+(function(){
+ var K='mz_det',ids=['name','tel','mail'];
+ try{var d=JSON.parse(sessionStorage.getItem(K)||'{}');var ch=false;ids.forEach(function(i){var e=document.getElementById(i);if(e&&!e.value&&d[i]){e.value=d[i];ch=true;}});if(ch&&location.hash.indexOf('bank/')>-1&&typeof route==='function')route();}catch(x){}
+ ids.forEach(function(i){var e=document.getElementById(i);if(e)e.addEventListener('input',function(){try{var d={};ids.forEach(function(j){d[j]=document.getElementById(j).value});sessionStorage.setItem(K,JSON.stringify(d));}catch(x){}});});
+ document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('#bank a[target="_blank"]'):null;if(!a)return;var touch=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;if(!touch)return;ev.preventDefault();window.location.href=a.href;},true);
+})();
+</script>
 </body>
 </html>
