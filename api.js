@@ -1,7 +1,7 @@
 /* החיבור בין דפי האתר למערכת החתימות בגוגל.
  * הפניות נשלחות בלי העוגיות של גוגל (credentials: 'omit'), ולכן הדפים עובדים גם למי שמחובר לכמה חשבונות גוגל.
  * google.script.run כאן מחקה את מה שהיה בדפים של גוגל, כדי שהקוד של הדפים כמעט לא ישתנה. */
-var API_URL = 'https://script.google.com/macros/s/AKfycbxndkOaXpYctEfFeOLRKffHSQ8HxaQXrff6jzowBQoNEPn4qH2sLdc-WdNPjN45RzRp/exec';
+var API_URL = 'https://meir-crm.1-2be.workers.dev/sign';
 
 var SAFE_RETRY = ['apiSign', 'apiPlace', 'apiAdmin'];   // רק קריאות שלא משנות כלום מנסים שוב לבד
 function api(fn, args, tries) {
