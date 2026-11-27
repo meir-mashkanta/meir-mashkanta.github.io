@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>מאיר אייזנבאך · יעוץ משכנתאות</title>
+<style>body{font-family:Arial,sans-serif;background:#f4f7f8;color:#0F4C5C;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box}.b{text-align:center;font-size:18px;line-height:1.6}.s{width:38px;height:38px;border:4px solid #cfe0e3;border-top-color:#0F4C5C;border-radius:50%;animation:r 1s linear infinite;margin:0 auto 14px}@keyframes r{to{transform:rotate(360deg)}}</style>
+</head><body><div class="b"><div class="s" id="s"></div><div id="m">הטופס נטען…</div></div>
+<script>
+/* הטופס ללקוחות: הדף נפתח מיד מהאתר, והתוכן מגיע ממערכת הלקוחות דרך תחנת ביניים (בלי גישה ישירה לגוגל) */
+(function () {
+  var P = 'https://epcivylxlyyfyklwseae.supabase.co/functions/v1/crm';
+  var q = new URLSearchParams(location.search).get('q');
+  var m = document.getElementById('m'), s = document.getElementById('s');
+  function fail(t) { m.textContent = t; if (s) s.style.display = 'none'; }
+  if (!q) return fail('הקישור לא תקין');
+  function go(n) {
+    fetch(P + '?q=' + encodeURIComponent(q), { credentials: 'omit' })
+      .then(function (r) { return r.text(); })
+      .then(function (t) {
+        if (!/^\s*<!doctype/i.test(t)) throw new Error('bad');
+        document.open(); document.write(t); document.close();
+      })
+      .catch(function () {
+        if (n < 2) { m.textContent = 'עוד רגע…'; setTimeout(function () { go(n + 1); }, 1500); }
+        else fail('לא הצלחנו לטעון את הטופס. נסו לרענן את הדף, או להתקשר למאיר אייזנבאך: 054-859-5949');
+      });
+  }
+  go(0);
+})();
+</script>
+</body></html>
